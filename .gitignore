@@ -1,0 +1,14 @@
+# Ignore common Python files and directories
+*.pyc
+.DS_Store
+.env
+.venv
+.idea
+__pycache__
+venv
+
+# Ignore sensitive data
+*.env
+*.cache
+*.log
+commands.txt
