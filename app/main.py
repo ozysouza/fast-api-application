@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, Response, status, HTTPException
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import Dict, Any, Type
 
 from .database import create_db_and_tables, get_session
 from . import schemas, models
@@ -22,28 +22,28 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/posts")
-def get_posts(db: Session = Depends(get_session)) -> Dict[str, Any]:
+def get_posts(db: Session = Depends(get_session)):
     posts = db.query(models.Post).all()
-    return {"data": posts}
+    return posts
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: schemas.PostCreate, db: Session = Depends(get_session)) -> Dict[str, Any]:
+def create_post(post: schemas.PostCreate, db: Session = Depends(get_session)):
     new_post = models.Post(**post.model_dump())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return {"data": new_post}
+    return new_post
 
 
 @app.get("/posts/{id}")
-def get_post(id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
+def get_post(id: int, db: Session = Depends(get_session)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with ID: {id} was not found!")
-    return {"more_details": post}
+    return post
 
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -59,8 +59,8 @@ def delete_post(id: int, db: Session = Depends(get_session)) -> Response:
 
 
 @app.put("/posts/{id}")
-def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_session)) -> Dict[str, Any]:
-    post_query = db.query(Post).filter(Post.id == id)
+def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_session)):
+    post_query = db.query(models.Post).filter(models.Post.id == id)
 
     post = post_query.first()
     if not post:
@@ -69,4 +69,4 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
 
     post_query.update(updated_post.model_dump(), synchronize_session=False)
     db.commit()
-    return {"data": post_query.first()}
+    return post_query.first()
