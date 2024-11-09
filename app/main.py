@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import Dict, Any
 
 from .database import create_db_and_tables, get_session
-from .models import Post
+from . import schemas, models
 
 ml_models = {}
 
@@ -23,13 +23,13 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/posts")
 def get_posts(db: Session = Depends(get_session)) -> Dict[str, Any]:
-    posts = db.query(Post).all()
+    posts = db.query(models.Post).all()
     return {"data": posts}
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_posts(post: Post, db: Session = Depends(get_session)) -> Dict[str, Any]:
-    new_post = Post(**post.model_dump())
+def create_posts(post: schemas.PostCreate, db: Session = Depends(get_session)) -> Dict[str, Any]:
+    new_post = models.Post(**post.model_dump())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -38,7 +38,7 @@ def create_posts(post: Post, db: Session = Depends(get_session)) -> Dict[str, An
 
 @app.get("/posts/{id}")
 def get_posts(id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
-    post = db.query(Post).filter(Post.id == id).first()
+    post = db.query(models.Post).filter(models.Post.id == id).first()
 
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -48,7 +48,7 @@ def get_posts(id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_session)) -> Response:
-    post = db.query(Post).filter(Post.id == id)
+    post = db.query(models.Post).filter(models.Post.id == id)
     if not post.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with ID: {id}, does not exist!")
@@ -59,7 +59,7 @@ def delete_post(id: int, db: Session = Depends(get_session)) -> Response:
 
 
 @app.put("/posts/{id}")
-def update_post(id: int, updated_post: Post, db: Session = Depends(get_session)) -> Dict[str, Any]:
+def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_session)) -> Dict[str, Any]:
     post_query = db.query(Post).filter(Post.id == id)
 
     post = post_query.first()
