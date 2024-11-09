@@ -28,7 +28,7 @@ def get_posts(db: Session = Depends(get_session)) -> Dict[str, Any]:
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_posts(post: schemas.PostCreate, db: Session = Depends(get_session)) -> Dict[str, Any]:
+def create_post(post: schemas.PostCreate, db: Session = Depends(get_session)) -> Dict[str, Any]:
     new_post = models.Post(**post.model_dump())
     db.add(new_post)
     db.commit()
@@ -37,7 +37,7 @@ def create_posts(post: schemas.PostCreate, db: Session = Depends(get_session)) -
 
 
 @app.get("/posts/{id}")
-def get_posts(id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
+def get_post(id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
     if not post:
