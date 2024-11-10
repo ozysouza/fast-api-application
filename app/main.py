@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, Response, status, HTTPException
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
-from typing import Dict, Any, Type
+from sqlalchemy.exc import IntegrityError
+from typing import Dict, Any, Type, List
 
 from .database import create_db_and_tables, get_session
 from . import schemas, models
@@ -70,3 +71,22 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
     post_query.update(updated_post.model_dump(), synchronize_session=False)
     db.commit()
     return post_query.first()
+
+
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_session)):
+    new_user = models.User(**user.model_dump())
+
+    db.add(new_user)
+
+    try:
+        db.commit()
+        db.refresh(new_user)
+    except IntegrityError:
+        db.rollback()  # Rollback the transaction in case of error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A user with this email already exists."
+        )
+
+    return new_user
