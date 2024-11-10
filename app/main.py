@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import Dict, Any, Type, List
 
 from .database import create_db_and_tables, get_session
-from . import schemas, models
+from . import schemas, models, utils
 
 ml_models = {}
 
@@ -75,10 +75,10 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
 
 @app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_session)):
+    user.password = utils.get_password_hash(user.password)
+
     new_user = models.User(**user.model_dump())
-
     db.add(new_user)
-
     try:
         db.commit()
         db.refresh(new_user)
