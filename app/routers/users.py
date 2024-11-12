@@ -5,10 +5,13 @@ from sqlalchemy.exc import IntegrityError
 from app import utils, schemas, models
 from app.database import get_session
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/users",
+    tags=["Users"]
+)
 
 
-@router.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_session)):
     user.password = utils.get_password_hash(user.password)
 
@@ -27,7 +30,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_session)):
     return new_user
 
 
-@router.get("/users/{id}", response_model=schemas.UserResponse)
+@router.get("/{id}", response_model=schemas.UserResponse)
 def get_user(id: int, db: Session = Depends(get_session)):
     user = db.query(models.User).filter(models.User.id == id).first()
 
