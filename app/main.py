@@ -1,11 +1,8 @@
-from fastapi import FastAPI, Depends, Response, status, HTTPException
+from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-from typing import Dict, Any, Type, List
 
-from .database import create_db_and_tables, get_session
-from . import schemas, models, utils
+from .database import create_db_and_tables
+from app.routers import post, users
 
 ml_models = {}
 
@@ -21,91 +18,5 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-
-@app.get("/posts", response_model=List[schemas.PostResponse])
-def get_posts(db: Session = Depends(get_session)):
-    posts = db.query(models.Post).all()
-    return posts
-
-
-@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
-def create_post(post: schemas.PostCreate, db: Session = Depends(get_session)):
-    new_post = models.Post(**post.model_dump())
-    db.add(new_post)
-    db.commit()
-    db.refresh(new_post)
-    return new_post
-
-
-@app.get("/posts/{id}", response_model=schemas.PostResponse)
-def get_post(id: int, db: Session = Depends(get_session)):
-    post = db.query(models.Post).filter(models.Post.id == id).first()
-
-    if not post:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Post with ID: {id} was not found!"
-        )
-    return post
-
-
-@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_session)) -> Response:
-    post = db.query(models.Post).filter(models.Post.id == id)
-    if not post.first():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Post with ID: {id}, does not exist!"
-        )
-
-    post.delete(synchronize_session=False)
-    db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@app.put("/posts/{id}", response_model=schemas.PostResponse)
-def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_session)):
-    post_query = db.query(models.Post).filter(models.Post.id == id)
-
-    post = post_query.first()
-    if not post:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Post with ID: {id}, does not exist!"
-        )
-
-    post_query.update(updated_post.model_dump(), synchronize_session=False)
-    db.commit()
-    return post_query.first()
-
-
-@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_session)):
-    user.password = utils.get_password_hash(user.password)
-
-    new_user = models.User(**user.model_dump())
-    db.add(new_user)
-    try:
-        db.commit()
-        db.refresh(new_user)
-    except IntegrityError:
-        db.rollback()  # Rollback the transaction in case of error
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="A user with this email already exists."
-        )
-
-    return new_user
-
-
-@app.get("/users/{id}", response_model=schemas.UserResponse)
-def get_user(id: int, db: Session = Depends(get_session)):
-    user = db.query(models.User).filter(models.User.id == id).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id: {id} does not exist."
-        )
-
-    return user
+app.include_router(post.router)
+app.include_router(users.router)
