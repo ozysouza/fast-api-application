@@ -42,8 +42,10 @@ def get_post(id: int, db: Session = Depends(get_session)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Post with ID: {id} was not found!")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post with ID: {id} was not found!"
+        )
     return post
 
 
@@ -51,8 +53,10 @@ def get_post(id: int, db: Session = Depends(get_session)):
 def delete_post(id: int, db: Session = Depends(get_session)) -> Response:
     post = db.query(models.Post).filter(models.Post.id == id)
     if not post.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Post with ID: {id}, does not exist!")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post with ID: {id}, does not exist!"
+        )
 
     post.delete(synchronize_session=False)
     db.commit()
@@ -65,8 +69,10 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
 
     post = post_query.first()
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Post with ID: {id}, does not exist!")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post with ID: {id}, does not exist!"
+        )
 
     post_query.update(updated_post.model_dump(), synchronize_session=False)
     db.commit()
