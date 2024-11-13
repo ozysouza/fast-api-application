@@ -18,6 +18,7 @@ class Post(SQLModel, table=True):
     created_at: Optional[datetime] = Field(
         sa_column=Column(TIMESTAMP(timezone=True), server_default=text('now()'))
     )
+    owner_id: int = Field(foreign_key="users.id", ondelete="CASCADE", nullable=False)
 
 
 class User(SQLModel, table=True):
@@ -28,4 +29,3 @@ class User(SQLModel, table=True):
     created_at: Optional[datetime] = Field(
         sa_column=Column(TIMESTAMP(timezone=True), server_default=text('now()'))
     )
-
