@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import Column, Boolean
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 
 
 class Post(SQLModel, table=True):
@@ -19,7 +19,7 @@ class Post(SQLModel, table=True):
         sa_column=Column(TIMESTAMP(timezone=True), server_default=text('now()'))
     )
     owner_id: int = Field(foreign_key="users.id", ondelete="CASCADE", nullable=False)
-
+    owner: Optional["User"] = Relationship(back_populates="posts")
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
@@ -29,3 +29,4 @@ class User(SQLModel, table=True):
     created_at: Optional[datetime] = Field(
         sa_column=Column(TIMESTAMP(timezone=True), server_default=text('now()'))
     )
+    posts: list["Post"] = Relationship(back_populates="owner")
