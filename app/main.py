@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
 from .database import create_db_and_tables
-from app.routers import post, users, auth
+from app.routers import post, users, auth, vote
 
 ml_models = {}
 
@@ -21,3 +21,4 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(post.router)
 app.include_router(users.router)
 app.include_router(auth.router)
+app.include_router(vote.router)
