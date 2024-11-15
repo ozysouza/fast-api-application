@@ -1,7 +1,7 @@
-import os
 from sqlmodel import Session, SQLModel, create_engine
+from app.config import settings
 
-POSTGRES_DATABASE_URL = f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@{os.getenv('POSTGRES_SERVER')}/{os.getenv('POSTGRES_DB')}"
+POSTGRES_DATABASE_URL = f"postgresql://{settings.DATABASE_USERNAME}:{settings.DATABASE_PASSWORD}@{settings.DATABASE_HOSTNAME}/{settings.DATABASE_NAME}"
 
 engine = create_engine(POSTGRES_DATABASE_URL)
 
