@@ -4,6 +4,12 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
+class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    created_at: datetime
+
+
 class PostBase(BaseModel):
     title: str
     content: str
@@ -17,18 +23,12 @@ class PostCreate(PostBase):
 class PostResponse(PostBase):
     id: int
     created_at: datetime
-    owner_id: int
+    owner: UserResponse
 
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-
-
-class UserResponse(BaseModel):
-    id: int
-    email: EmailStr
-    created_at: datetime
 
 
 class UserLogin(BaseModel):
