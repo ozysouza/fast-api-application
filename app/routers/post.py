@@ -1,5 +1,6 @@
 from fastapi import Depends, Response, status, HTTPException, APIRouter
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
 
 from app import schemas, models, ouath2
@@ -11,11 +12,19 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[schemas.PostResponse])
+@router.get("/", response_model=List[schemas.PostVoteOut])
 def get_posts(db: Session = Depends(get_session), current_user: int = Depends(ouath2.get_current_user),
               limit: int = 10, skip: int = 0, search: Optional[str] = ""):
-    posts = (db.query(models.Post).filter(models.Post.title.contains(search))
-             .limit(limit).offset(skip).all())
+    posts = (db.query(
+        models.Post, func.count(models.Vote.post_id).label("votes")
+    ).filter(
+        models.Post.title.contains(search)
+    ).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True
+    ).group_by(
+        models.Post.id
+    ).limit(limit).offset(skip).all())
+
     return posts
 
 
@@ -29,9 +38,16 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_session),
     return new_post
 
 
-@router.get("/{id}", response_model=schemas.PostResponse)
+@router.get("/{id}", response_model=schemas.PostVoteOut)
 def get_post(id: int, db: Session = Depends(get_session), current_user: int = Depends(ouath2.get_current_user)):
-    post = db.query(models.Post).filter(models.Post.id == id).first()
+    post = posts = (db.query(
+        models.Post, func.count(models.Vote.post_id).label("votes")
+    )
+    ).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True
+    ).group_by(
+        models.Post.id
+    ).filter(models.Post.id == id).first()
 
     if not post:
         raise HTTPException(

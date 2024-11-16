@@ -30,6 +30,11 @@ class PostResponse(PostBase):
     owner: UserResponse  # Details of the user who created the post.
 
 
+class PostVoteOut(BaseModel):
+    Post: PostResponse
+    votes: int
+
+
 class UserCreate(BaseModel):
     """Schema for creating a new User."""
     email: EmailStr  # Email of the user.
