@@ -11,4 +11,4 @@ venv
 *.env
 *.cache
 *.log
-commands.txt
+*.txt
