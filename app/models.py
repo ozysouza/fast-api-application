@@ -39,4 +39,4 @@ class Vote(SQLModel, table=True):
     post_id: int = Field(foreign_key="posts.id", ondelete="CASCADE", primary_key=True, nullable=False)
 
     post: Optional["Post"] = Relationship(sa_relationship_kwargs={"lazy": "select"})
-    user: Optional["Post"] = Relationship(sa_relationship_kwargs={"lazy": "select"})
+    user: Optional["Post"] = Relationship(sa_relationship_kwargs={"lazy": "select", "overlaps": "post"})
