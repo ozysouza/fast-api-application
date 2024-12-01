@@ -61,7 +61,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{ vars.DOCKER_HUB_USERNAME }}/fast-api:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fast-api:latest
           cache-from: type=registry,ref=user/app:buildcache
           cache-to: type=registry,ref=user/app:buildcache,mode=max
       - name: Image digest
