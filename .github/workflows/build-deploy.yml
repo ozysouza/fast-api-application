@@ -4,7 +4,7 @@ on:
   - push
   - pull_request
 jobs:
-  TestEnvironment:
+  build:
     environment:
       name: Testing
     env:
@@ -66,3 +66,22 @@ jobs:
           cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/fast-api:buildcache,mode=max
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [ build ]
+    environment:
+      name: Production
+    steps:
+      - name: Deploy Fast API application to AWS Instance
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USERNAME }}
+          key: ${{ secrets.KEY }}
+          password: ${{ secrets.PROD_PASSWORD }}
+          script: |
+            echo ${{ secrets.PROD_PASSWORD }} | su -S - ${{ secrets.LINUX_USERNAME }}
+            cd app/src
+            git pull
+            echo ${{ secrets.PROD_PASSWORD }} | sudo -S systemctl restart fastapi
