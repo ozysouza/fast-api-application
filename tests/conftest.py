@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from app import models
+from tests.utils import randon_string, randon_email
 import pytest
 
 from app.main import app
@@ -32,8 +33,8 @@ def client(session):
 @pytest.fixture()
 def test_first_user(client):
     user_data = {
-        "email": "test@gmail.com",
-        "password": "123456"
+        "email": randon_email(),
+        "password": randon_string()
     }
 
     res = client.post(
@@ -50,8 +51,8 @@ def test_first_user(client):
 @pytest.fixture()
 def test_second_user(client):
     user_data = {
-        "email": "fastapi@gmail.com",
-        "password": "654321"
+        "email": randon_email(),
+        "password": randon_string()
     }
 
     res = client.post(
